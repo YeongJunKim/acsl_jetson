@@ -185,6 +185,14 @@ include_directories(
 #   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 # )
 
+
+catkin_python_setup()
+
+catkin_install_python(
+  PROGRAMS acsl_jetson/node/get_pos_from_jetson.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
 #############
 ## Testing ##
 #############
