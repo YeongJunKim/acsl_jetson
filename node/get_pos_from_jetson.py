@@ -154,7 +154,16 @@ class SerialClient(object):
                 rospy.logwarn('Run loop error: %s' % exc)
                 with self.read_lock:
                     self.port.flushInput()
+    def publising(self, data)
+        rec_box.x_pos = data.x_pos
+        rec_box.y_pos = data.y_pos
+        
+        rec_box.x_size = data.x_size
+        rec_box.y_size = data.y_size
 
+        # TODO publish
+        # TODO make message dir
+        # uint16_t x_pos, y_pos, x_size, y_size
 
 if __name__=="__main__":
     
