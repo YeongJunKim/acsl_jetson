@@ -3,10 +3,14 @@ project(acsl_jetson)
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
+  serial
   rospy
   std_msgs
 )
 catkin_package(
+  CATKIN_DEPENDS
+    serial
+    std_msgs
 #  INCLUDE_DIRS include
 #  LIBRARIES acsl_jetson
 #  CATKIN_DEPENDS roscpp rospy std_msgs
@@ -14,8 +18,13 @@ catkin_package(
 )
 
 include_directories(
-# include
   ${catkin_INCLUDE_DIRS}
+)
+
+add_executable(acsl_jetson_node node/get_pos_from_jetson_cpp.cpp)
+
+target_link_libraries(acsl_jetson_node
+  ${catkin_LIBRARIES}
 )
 
 catkin_install_python(PROGRAMS
