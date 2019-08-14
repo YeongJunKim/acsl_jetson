@@ -20,6 +20,9 @@
 #include <serial/serial.h>
 #include <std_msgs/String.h>
 #include <std_msgs/Empty.h>
+#include <acsl_jetson/boxInfo.h>
+
+#define FINAL_STATE 0x0A
 
             uint16_t mode = 0x00;
 
@@ -28,6 +31,9 @@
             uint16_t size_x = 0;
             uint16_t size_y = 0;
             uint8_t checksum = 0;
+
+            uint16_t sequence = 0;
+
 serial::Serial ser;
 
 void write_callback(const std_msgs::String::ConstPtr& msg){
@@ -41,6 +47,8 @@ int main (int argc, char** argv){
 
     ros::Subscriber write_sub = nh.subscribe("write", 1000, write_callback);
     ros::Publisher read_pub = nh.advertise<std_msgs::String>("read", 1000);
+
+    ros::Publisher boxInfo_pub = nh.advertise<acsl_jetson::boxInfo>("boxInfo", 1);
 
     try
     {
@@ -71,12 +79,13 @@ int main (int argc, char** argv){
             ROS_INFO_STREAM("Reading from serial port");
             std_msgs::String result;
             result.data = ser.read(ser.available());
-            ROS_INFO_STREAM("Read: " << result.data);
+            // ROS_INFO_STREAM("Read: " << result.data);
             read_pub.publish(result);
 
+            printf("read :");
             for(int i = 0 ; i < result.data.length(); i++)
                 printf("%02X, ", (uint8_t)result.data.at(i));
-            std::cout<<std::endl;
+            printf("\r\n");
 
 
 
@@ -84,8 +93,13 @@ int main (int argc, char** argv){
             for(int i = 0 ; i < result.data.length(); i++)
             {
                 uint8_t data = result.data.at(i);
+                
+                if(mode != FINAL_STATE)
+                    checksum += data;
+                    
                 if(mode == 0x00)
                 {
+
                     if(data == 0xFF)
                         mode = 0x01;
                     else
@@ -145,6 +159,22 @@ int main (int argc, char** argv){
                     if(checksum == data)
                     {
                         //TODO publish topic
+                        std::cout<<"matched"<<std::endl;
+                        std::cout<<"pos_x :"<<pos_x<<std::endl;
+                        std::cout<<"pos_y :"<<pos_y<<std::endl;
+                        std::cout<<"size_x :"<<size_x<<std::endl;
+                        std::cout<<"size_y :"<<size_y<<std::endl;
+
+                        acsl_jetson::boxInfo publisher;
+
+                        publisher.seq = sequence++;
+                        publisher.pos_x = pos_x;
+                        publisher.pos_y = pos_y;
+                        publisher.size_x = size_x;
+                        publisher.size_y = size_y;
+
+                        boxInfo_pub.publish(publisher);
+                        
                     }
                     pos_x = 0;
                     pos_y = 0;
@@ -153,7 +183,7 @@ int main (int argc, char** argv){
                     checksum = 0;
                     mode = 0x00;
                 }
-                checksum += data;
+
             }
         }
         loop_rate.sleep();
